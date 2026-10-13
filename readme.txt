@@ -1,3 +1,6 @@
+roadmap:
+    crear un passer para los modelos
+
 bootstrap.py
 | - serverx.py
 |   | - vm engine * expone la api -api> rendere.json

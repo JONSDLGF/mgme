@@ -26,6 +26,15 @@ def dentro_triangulo(p, a, b, c):
         (r1 <= 0 and r2 <= 0 and r3 <= 0)
     )
 
+def proyectar(v, f):
+    x, y, z = v
+    if z <= 0:
+        return None
+    return (
+        ANCHO / 2 + f * x / z,
+        ALTO / 2 - f * y / z
+    )
+
 def cross(a, b):
     return a[0] * b[1] - a[1] * b[0]
 
@@ -44,11 +53,22 @@ def uv_en_punto(p, a, b, c, uv_a, uv_b, uv_c):
 
     w_a = 1.0 - w_b - w_c
 
-    u = w_a * uv_a[0] + w_b * uv_b[0] + w_c * uv_c[0]
-    v = w_a * uv_a[1] + w_b * uv_b[1] + w_c * uv_c[1]
-    z = w_a * za      + w_b * zb      + w_c * zc
+    za, zb, zc = a[2], b[2], c[2]
 
-    return (u, v, z)
+    inv_z = w_a / za + w_b / zb + w_c / zc
+    if inv_z == 0:
+        return None
+
+    u = (w_a * uv_a[0] / za +
+         w_b * uv_b[0] / zb +
+         w_c * uv_c[0] / zc) / inv_z
+
+    v = (w_a * uv_a[1] / za +
+         w_b * uv_b[1] / zb +
+         w_c * uv_c[1] / zc) / inv_z
+
+    z = 1.0 / inv_z
+    return u,v,z
 
 def getdata():
     file=open(PATH_DIR / "scene.json","r")
@@ -56,28 +76,45 @@ def getdata():
     file.close()
     return r
 
-sz = 50
+# make a Vmem
+
+sz = 200
 ANCHO, ALTO = sz*4, sz*3
 
-@dataclass
-class Vmem:
-    CAP: list
-    MOD: list
-    IMG: list
-    CAM: list
 ZBF = [float("inf")] * ( ANCHO * ALTO )
+f = 150
+obj="""
+mtllib triangulo.mtl
+o Triangulo
 
-vmem = Vmem()
-vmem.MOD = [
-        [
-            [ [], [], [] ],[ ]
-        ]
-]
+v -0.5 -0.3 0.5
+v  0.5 -0.3 0.5
+v  0.0  0.5 4.0
+
+vt 0.0 0.0
+vt 1.0 0.0
+vt 0.5 1.0
+
+usemtl MaterialTriangulo
+f 1/1 2/2 3/3
+"""
+
+mtl="""
+newmtl MaterialTriangulo
+Kd 1.0 1.0 1.0
+map_Kd textura.png
+"""
 
 # Coordenadas de los tres vértices
-a = (150, 100, 0.1) # xy = ( a[0] / a[2], a[1] / a[2] )
-b = (650, 180, 0.2)
-c = (350, 500, 0.3)
+a = (-0.5, -0.3, 0.5) # xy = ( a[0] / a[2], a[1] / a[2] )
+b = ( 0.5, -0.3, 0.5)
+c = ( 0.0,  0.5, 4.0)
+pa = proyectar(a,f)
+pb = proyectar(b,f)
+pc = proyectar(c,f)
+ra = (*pa, a[2])
+rb = (*pb, b[2])
+rc = (*pc, c[2])
 
 # UV asignadas a los vértices: (u, v)
 uv_a = (0.0, 0.0)
@@ -113,10 +150,10 @@ if not renderizador:
     raise RuntimeError("No se pudo crear el renderizador")
 
 # Calcula la caja mínima que contiene el triángulo y limítala a la ventana.
-min_x = max(0, min(a[0], b[0], c[0]))
-max_x = min(ANCHO - 1, max(a[0], b[0], c[0]))
-min_y = max(0, min(a[1], b[1], c[1]))
-max_y = min(ALTO - 1, max(a[1], b[1], c[1]))
+min_x = max(0,         int(min(pa[0], pb[0], pc[0])))
+max_x = min(ANCHO - 1, int(max(pa[0], pb[0], pc[0])))
+min_y = max(0,         int(min(pa[1], pb[1], pc[1])))
+max_y = min(ALTO - 1,  int(max(pa[1], pb[1], pc[1])))
 
 eventos = sdl2.SDL_Event()
 
@@ -135,9 +172,10 @@ while engine.loop:
 
     it=time.time()
 
-    now = getdata()
+    #now = getdata()
 
     if engine.update:
+        ZBF = [float("inf")] * ( ANCHO * ALTO )
         # Fondo oscuro
         sdl2.SDL_SetRenderDrawColor(renderizador, 25, 25, 30, 255)
         sdl2.SDL_RenderClear(renderizador)
@@ -151,20 +189,24 @@ while engine.loop:
                 punto = (x + 0.5, y + 0.5)
 
 
-                if dentro_triangulo(punto, a, b, c):
-                    uvz = uv_en_punto(punto, a, b, c, uv_a, uv_b, uv_c)
+                if dentro_triangulo(punto, ra, rb, rc):
+                    # preguntas:
+                    # el calculo de z deveria de estar dentro de la funcion uv_en_punto?
+                    indice = x + y * ANCHO
+                    uvz = uv_en_punto(punto, ra, rb, rc, uv_a, uv_b, uv_c) 
+                    if uvz is not None:
+                        u,v,z=uvz
+                        if z < ZBF[indice]:
+                            ZBF[indice] = z
+                            #divujar
+                            # Pillow cuenta las filas desde arriba.
+                            tx = max(0, min(tex_w - 1, int(u * (tex_w - 1))))
+                            ty = max(0, min(tex_h - 1, int(v * (tex_h - 1))))
 
-                    if uv is not None:
-                        u, v, z = uvz
-                        
-                        # Pillow cuenta las filas desde arriba.
-                        tx = max(0, min(tex_w - 1, int(u * (tex_w - 1))))
-                        ty = max(0, min(tex_h - 1, int(v * (tex_h - 1))))
-                        
-                        sdl2.SDL_SetRenderDrawColor(
-                            renderizador, *textura.getpixel((tx, ty)), 255
-                        )
-                        sdl2.SDL_RenderDrawPoint(renderizador, x, y)
+                            sdl2.SDL_SetRenderDrawColor(
+                                renderizador, *textura.getpixel((tx, ty)), 255
+                            )
+                            sdl2.SDL_RenderDrawPoint(renderizador, x, y)
         engine.update=False
 
     sdl2.SDL_RenderPresent(renderizador)

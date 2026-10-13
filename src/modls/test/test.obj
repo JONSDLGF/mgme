@@ -1,0 +1,13 @@
+mtllib triangulo.mtl
+o Triangulo
+
+v -0.5 -0.3 0.5
+v  0.5 -0.3 0.5
+v  0.0  0.5 4.0
+
+vt 0.0 0.0
+vt 1.0 0.0
+vt 0.5 1.0
+
+usemtl MaterialTriangulo
+f 1/1 2/2 3/3
