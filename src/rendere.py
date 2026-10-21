@@ -125,6 +125,12 @@ uv_c = (0.5, 1.0)
 textura = Image.open( ROOT_DIR / "textura.png" ).convert("RGB")
 tex_w, tex_h = textura.size
 
+@dataclass
+class Model:
+    v:list = [[(-0.5, -0.3,  0.5),( 0.5, -0.3,  0.5),( 0.0,  0.5,  4.0)]]
+    vt:list = [[0, (0.0, 0.0), (1.0, 0.0), (0.5, 0.1)]]
+    texture:list = []
+
 sdl2.ext.init()
 
 ventana = sdl2.SDL_CreateWindow(
@@ -183,6 +189,7 @@ while engine.loop:
         # Color del triángulo: naranja
         sdl2.SDL_SetRenderDrawColor(renderizador, 255, 100, 30, 255)
 
+        
         for y in range(min_y, max_y + 1):
             for x in range(min_x, max_x + 1):
                 # Usar el centro del píxel suele dar un resultado más uniforme.
