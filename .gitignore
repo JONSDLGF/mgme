@@ -1,5 +1,6 @@
 *.png
 *.jpg
+build/
 .venv/
 __pycache__/
 LICENSE
