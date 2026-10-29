@@ -6,8 +6,13 @@ import time
 import pathlib
 from dataclasses import dataclass
 import pathlib
+import sys
+import os
 
 ROOT_DIR = pathlib.Path(__file__).parent.resolve()
+sys.path.append(ROOT_DIR)
+
+import WaveFrontObjPasser
 
 def lado(inicio, fin, punto):
     return (
@@ -105,6 +110,8 @@ Kd 1.0 1.0 1.0
 map_Kd textura.png
 """
 
+x=WaveFrontObjPasser.parse_obj(ROOT_DIR / "../../assets/modls/test/test.obj")
+print(x)
 # Coordenadas de los tres vértices
 a = (-0.5, -0.3, 0.5) # xy = ( a[0] / a[2], a[1] / a[2] )
 b = ( 0.5, -0.3, 0.5)
@@ -122,14 +129,8 @@ uv_b = (1.0, 0.0)
 uv_c = (0.5, 1.0)
 
 # Carga la imagen que se usará como textura
-textura = Image.open( ROOT_DIR / "textura.png" ).convert("RGB")
+textura = Image.open( ROOT_DIR / "../../assets/modls/test/textura.png" ).convert("RGB")
 tex_w, tex_h = textura.size
-
-@dataclass
-class Model:
-    v:list = [[(-0.5, -0.3,  0.5),( 0.5, -0.3,  0.5),( 0.0,  0.5,  4.0)]]
-    vt:list = [[0, (0.0, 0.0), (1.0, 0.0), (0.5, 0.1)]]
-    texture:list = []
 
 sdl2.ext.init()
 
