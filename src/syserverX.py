@@ -7,7 +7,10 @@ if __name__ == "__main__":
         file = open(mainpath / "paths.json", "r")
         pathsall = json.load(file)
         file.close()
-       
+        
+        # jode ya me voy a dormir 21:57 y esto es lo que e actualizado:
+        modules=[]
+        # fin de la actu
         proc = subprocess.Popen([sys.executable, mainpath / "moduls/rendr/rendere.py"])
 
         # El programa continúa haciendo otras cosas aquí
