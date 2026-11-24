@@ -8,16 +8,19 @@ if __name__ == "__main__":
         pathsall = json.load(file)
         file.close()
         
-        modules = ["rendr", "sdund", "vmpy"]
+        modulesname = ["rendr", "sdund", "vmpy"]
+        prog = dict
+        
         # fin de la actu
-        proc = subprocess.Popen([sys.executable, mainpath / "moduls/rendr/rendere.py"])
+        for i in modulesname:
+            prog[i] = subprocess.Popen([sys.executable, mainpath / f"moduls/{i}/main.py"])
 
-        # El programa continúa haciendo otras cosas aquí
+            # El programa continúa haciendo otras cosas aquí
+            if prog.poll() is None:
+                print("El proceso sigue ejecutándose")
+            else:
+                print("Terminó con código:", proc.returncode)
 
-        if proc.poll() is None:
-            print("El proceso sigue ejecutándose")
-        else:
-            print("Terminó con código:", proc.returncode)
         log(0, "make the soket")
         socket_path = pathlib.Path("/tmp/syserver.sock")
         socket_path.unlink(missing_ok=True)  # Elimina un socket viejo si quedó
