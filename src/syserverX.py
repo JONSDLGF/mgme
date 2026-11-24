@@ -8,8 +8,7 @@ if __name__ == "__main__":
         pathsall = json.load(file)
         file.close()
         
-        # jode ya me voy a dormir 21:57 y esto es lo que e actualizado:
-        modules=[]
+        modules = ["rendr", "sdund", "vmpy"]
         # fin de la actu
         proc = subprocess.Popen([sys.executable, mainpath / "moduls/rendr/rendere.py"])
 
